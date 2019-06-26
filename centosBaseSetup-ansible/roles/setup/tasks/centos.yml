@@ -1,0 +1,56 @@
+- name: 关闭firewalld  - CentOS
+  systemd: 
+    name: "{{ item }}"
+    enabled: no
+    state: stopped
+  with_items:
+    - firewalld
+  ignore_errors: True
+
+- name: 临时关闭 selinux
+  shell: "setenforce 0"
+  failed_when: false
+
+- name: 永久关闭 selinux
+  lineinfile:
+    dest: /etc/selinux/config
+    regexp: "^SELINUX="
+    line: "SELINUX=disabled"
+
+- name: 分发repo文件
+  copy:
+    src: files/{{ item.src }}
+    dest: "{{ item.dest }}"
+  with_items:
+    - { src: 'Centos-7.repo', dest: "/etc/yum.repos.d" }
+    
+- name: 重置repocache
+  command: yum makecache
+
+- name: 添加EPEL仓库
+  yum: name=epel-release state=latest update_cache=yes
+
+- name: 安装基础软件包
+  yum: 
+    name: 
+      - crontabs
+      - sysstat
+      - ntp
+      - wget
+      - python-pip
+    state: latest
+    update_cache: yes
+
+
+- block:
+    - name: 导入GPG key
+      rpm_key:
+        state: present
+        key: https://www.elrepo.org/RPM-GPG-KEY-elrepo.org
+    
+    - name: 导入elrepo
+      yum:
+        name: http://www.elrepo.org/elrepo-release-7.0-3.el7.elrepo.noarch.rpm
+        state: present
+  when: kernel != 'false'
+

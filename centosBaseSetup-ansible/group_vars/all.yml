@@ -1,0 +1,12 @@
+# PASSWD: zhangguanzhang
+ansible_ssh_username: root
+ansible_ssh_port: 22
+ansible_ssh_pass: root
+ansible_ssh_public_key: /root/.ssh/id_rsa.pub
+
+ntp_domain1: 'cn.pool.ntp.org'
+ntp_domain2: 's1b.time.edu.cn'
+TimeZone: 'Asia/Shanghai'
+kernel: false
+
+sshd_hosts: [ 192.168.6.200,192.168.6.201,192.168.6.202 ]

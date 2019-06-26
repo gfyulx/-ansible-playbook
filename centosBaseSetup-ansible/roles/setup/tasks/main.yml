@@ -1,0 +1,65 @@
+- include_tasks: centos.yml
+  when: ansible_distribution == "CentOS" or ansible_distribution == "RedHat"
+
+- name: 设置系统时区
+  timezone:
+    name: "{{ TimeZone }}"
+  when: TimeZone is defined
+
+- name: 修改fstab文件关闭swap
+  lineinfile:
+    dest: /etc/fstab     
+    regexp: "(^\\s*[^#].+swap)"
+    line: '#\1'
+    backrefs: yes
+
+
+- name: 分发modules-load和sysctl的conf
+  copy:
+    src: files/{{ item.src }}
+    dest: "{{ item.dest }}"
+  with_items:
+    - { src: 'centos7-model.conf', dest: "/etc/modules-load.d/" }
+    - { src: 'centos7.conf', dest: "/etc/security/limits.d/" }
+
+- name: 分发sysctl文件
+  template:
+    src: centos7-sysctl.conf.j2
+    dest: /etc/sysctl.d/centos7-sysctl.conf
+
+- name: enable --now systemd-modules-load
+  systemd:
+    name: systemd-modules-load
+    state: started
+    enabled: yes
+
+- name: 分发ntp配置文件
+  template:
+    src: ntp.conf.j2
+    dest: /etc/ntp.conf
+
+- name: 设置ntp,crond开机并启动
+  systemd: name={{ item }} enabled=yes
+  with_items:
+    - ntpd
+    - crond  
+
+- name: 设置hostname
+  hostname: name={{ hostname }}
+  when: hostname is defined and hostname
+
+
+- name: 设置sshd
+  command: ssh-keygen -f /root/.ssh/id_rsa -t rsa -N '' creates=/root/.ssh/id_rsa
+
+- name: 安装paramiko
+  command: pip install paramiko
+  
+- name: 复制knowhosts
+  ssh_copy_id:
+    hostname: "{{ item }}"
+    username: "{{ ansible_ssh_username }}"
+    password: "{{ ansible_ssh_pass }}"
+    ssh_public_key: "{{ ansible_ssh_public_key }}"
+    ssh_port: "{{ ansible_ssh_port }}"
+  with_items: "{{ sshd_hosts }}"

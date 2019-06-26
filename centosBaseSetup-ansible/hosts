@@ -1,0 +1,17 @@
+[master]
+192.168.6.200 hostname=master
+
+
+[node]
+192.168.6.201 hostname=slave1
+192.168.6.202 hostname=slave2
+
+
+[Master:children]
+master
+
+
+
+[Allnode:children]
+master
+node
