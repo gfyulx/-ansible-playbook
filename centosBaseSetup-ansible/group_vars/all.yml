@@ -10,3 +10,5 @@ TimeZone: 'Asia/Shanghai'
 kernel: false
 
 sshd_hosts: [ 192.168.6.200,192.168.6.201,192.168.6.202 ]
+
+IP: "{{ ansible_eth0['ipv4']['address'] }}"

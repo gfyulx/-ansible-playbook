@@ -48,6 +48,15 @@
   hostname: name={{ hostname }}
   when: hostname is defined and hostname
 
+- name: 将原有的hosts文件备份
+  shell: mv /etc/hosts /etc/hosts_bak
+
+- name: 将ansible端的hosts复制到各自机器上
+  copy: src=/root/hosts dest=/etc/ owner=root group=root mode=0644
+
+- name: 在新的hosts文件后面追加各自机器内网ip和hostname
+  lineinfile: dest=/etc/hosts line="{{IP}}  {{hostname}}"
+
 
 - name: 设置sshd
   command: ssh-keygen -f /root/.ssh/id_rsa -t rsa -N '' creates=/root/.ssh/id_rsa
